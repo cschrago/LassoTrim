@@ -1,6 +1,6 @@
 # LassoTrim_ScikitLearn
 
-**LassoTrim_ScikitLearn** is a Python script designed to filter aligned nucleotide sequences by identifying phylogenetically informative sites using two strategies: LASSO-based site selection and Shannon entropy filtering. This tool is particularly suited for preprocessing alignments prior to phylogenomic inference.
+**LassoTrim_v1.0** is a Python script designed to filter aligned nucleotide sequences by identifying phylogenetically informative sites using two strategies: LASSO-based site selection and Shannon entropy filtering. This tool is particularly suited for preprocessing alignments prior to phylogenomic inference.
 
 ## Features
 
@@ -28,7 +28,7 @@
 ## Usage
 
 ```bash
-python3 LassoTrim_ScikitLearn.py -s <alignment.fasta> [-l 1|0] [-r <replicates>]
+python3 LassoTrim_v1.0.py -s <alignment.fasta> [-l 1|0] [-r <replicates>]
 ```
 
 ### Arguments
@@ -54,7 +54,7 @@ Depending on the selected mode, the script generates the following:
 ## Example
 
 ```bash
-python3 LassoTrim_ScikitLearn.py -s example_aln.fasta -l 1 -r 5000
+python3 LassoTrim_v1.0.py -s example_aln.fasta -l 1 -r 5000
 ```
 
 This command runs the LASSO pipeline on `example_aln.fasta`, generating 5000 replicate trees and producing a filtered alignment of informative sites.
