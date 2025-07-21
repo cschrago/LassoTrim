@@ -1,4 +1,4 @@
-# LassoTrim_ScikitLearn
+# LassoTrim_v1.0
 
 **LassoTrim_v1.0** is a Python script designed to filter aligned nucleotide sequences by identifying phylogenetically informative sites using two strategies: LASSO-based site selection and Shannon entropy filtering. This tool is particularly suited for preprocessing alignments prior to phylogenomic inference.
 
