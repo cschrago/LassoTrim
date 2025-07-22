@@ -8,6 +8,9 @@ from collections import Counter
 from math import log2
 from Bio import SeqIO
 from Bio.Seq import Seq
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LassoCV
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Alignment filtering using LASSO or entropy.")
@@ -48,26 +51,16 @@ def run_lasso_replicates(infile, model, nseq, replicates):
         with open(outname, "a") as f:
             f.write(f"{lht} {lh}\n")
 
-def run_r_lasso(infile):
-    print("	(3) Running LASSO analysis.")
-    r_script = f"""
-    infile <- "{infile}.siteloglike.txt"
-    library(glmnet)
-    dat <- read.table(file=infile)
-    x <- model.matrix(V1 ~ ., data=dat)
-    y <- dat$V1
-    grid <- 10^seq(10, -2, length = 100)
-    lasso.mod <- glmnet(x, y, alpha = 1, lambda = grid)
-    cv.out <- cv.glmnet(x, y, alpha = 1)
-    pos <- seq(1, ncol(x) - 1)
-    lasso.coef <- predict(lasso.mod, type = "coefficients", s = cv.out$lambda.min)[1:ncol(x),]
-    ok <- ifelse(paste0("V", pos + 1) %in% names(lasso.coef[lasso.coef != 0]), 1, 0)
-    write(c("sitewise_info", ok), file = "LassoClassification.txt", ncolumns = length(ok) + 1, sep = " ", append=FALSE)
-    """
-    with open("temp_lasso.R", "w") as rfile:
-        rfile.write(r_script)
-    subprocess.run(["Rscript", "temp_lasso.R"])
-    os.remove("temp_lasso.R")
+def run_python_lasso(infile):
+    print("	(3) Running LASSO analysis in Python.")
+    dat = pd.read_csv(f"{infile}.siteloglike.txt", sep=" ", header=None)
+    y = dat.iloc[:, 0].values
+    X = dat.iloc[:, 1:].values
+    model = LassoCV(cv=5, random_state=42).fit(X, y)
+    coef = model.coef_
+    ok = [1 if c != 0 else 0 for c in coef]
+    with open("LassoClassification.txt", "w") as out:
+        out.write("sitewise_info " + " ".join(map(str, ok)) + "\n")
 
 def write_lasso_filtered_fasta(infile, records):
     with open("LassoClassification.txt") as f:
@@ -99,7 +92,7 @@ def write_entropy_filtered_fasta(infile, records):
     with open(f"{infile}.entropy.info.fasta", "w") as out:
         for rec in records:
             new_seq = ''.join([rec.seq[i] for i in indices])
-            rec.seq = Seq(new_seq)  # Fix: wrap string in Seq
+            rec.seq = Seq(new_seq)
             SeqIO.write(rec, out, "fasta")
 
 def main():
@@ -114,7 +107,7 @@ def main():
     if use_lasso == 1:
         model = run_model_finder(infile)
         run_lasso_replicates(infile, model, nseq, replicates)
-        run_r_lasso(infile)
+        run_python_lasso(infile)
         write_lasso_filtered_fasta(infile, records)
     else:
         write_entropy_filtered_fasta(infile, records)
